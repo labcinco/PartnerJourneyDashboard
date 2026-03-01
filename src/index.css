@@ -1,0 +1,19 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/container-queries";
+
+@theme {
+  --color-primary: #137fec;
+  --color-background-light: #f6f7f8;
+  --color-background-dark: #101922;
+  --font-display: "Manrope", sans-serif;
+  --radius-DEFAULT: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+}
+
+body {
+  font-family: 'Manrope', sans-serif;
+  @apply bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display antialiased;
+}

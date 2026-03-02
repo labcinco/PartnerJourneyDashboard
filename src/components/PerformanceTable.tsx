@@ -10,6 +10,7 @@ export type PerformanceRow = {
     week_2: number;
     week_3: number;
     week_4: number;
+    logo_url?: string;
 };
 
 export type SortConfig = {
@@ -90,7 +91,18 @@ export default function PerformanceTable({ data, sortConfig, requestSort, onRowC
                                             {isTopPriority && <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></div>}
                                             {row.cidade}
                                         </td>
-                                        <td className="whitespace-nowrap px-3 py-4 text-sm font-medium text-slate-900 dark:text-slate-200 group-hover:text-primary transition-colors">{row.estabelecimento}</td>
+                                        <td className="whitespace-nowrap px-3 py-4 text-sm font-medium text-slate-900 dark:text-slate-200 group-hover:text-primary transition-colors">
+                                            <div className="flex items-center gap-3">
+                                                {row.logo_url ? (
+                                                    <img src={row.logo_url} alt={row.estabelecimento} className="size-8 rounded-full border border-slate-100 dark:border-slate-700 shadow-sm object-cover" />
+                                                ) : (
+                                                    <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                                                        <span className="material-symbols-outlined text-[18px]">store</span>
+                                                    </div>
+                                                )}
+                                                {row.estabelecimento}
+                                            </div>
+                                        </td>
                                         <td className="whitespace-nowrap px-3 py-4 text-sm text-center">
                                             <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${row.status === 'ativo'
                                                 ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 ring-green-600/20'

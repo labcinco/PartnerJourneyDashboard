@@ -108,26 +108,37 @@ export default function PartnerDetailsView({ partner, onBack, onSaveOrders, onCl
                         <span className="material-symbols-outlined text-[18px] mr-1 group-hover:-translate-x-1 transition-transform">arrow_back</span>
                         Voltar para a lista
                     </button>
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-slate-900 dark:text-white text-3xl font-bold leading-tight tracking-tight">
-                            {partner.estabelecimento}
-                        </h1>
-                        <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-sm font-medium ring-1 ring-inset ${partner.status === 'ativo'
-                            ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 ring-green-600/20'
-                            : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 ring-red-600/20'
-                            }`}>
-                            {partner.status}
-                        </span>
+                    <div className="flex items-center gap-4">
+                        {partner.logo_url ? (
+                            <img src={partner.logo_url} alt={partner.estabelecimento} className="size-16 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md object-cover" />
+                        ) : (
+                            <div className="size-16 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 border border-slate-200 dark:border-slate-700">
+                                <span className="material-symbols-outlined text-3xl">store</span>
+                            </div>
+                        )}
+                        <div>
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-slate-900 dark:text-white text-3xl font-bold leading-tight tracking-tight">
+                                    {partner.estabelecimento}
+                                </h1>
+                                <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-sm font-medium ring-1 ring-inset ${partner.status === 'ativo'
+                                    ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 ring-green-600/20'
+                                    : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 ring-red-600/20'
+                                    }`}>
+                                    {partner.status}
+                                </span>
 
-                        <div className={`flex items-center ml-2 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1 bg-white dark:bg-slate-800 ${getStarColor(partner.priority_stars)}`}>
-                            <span className="material-symbols-outlined text-[18px] mr-1">star</span>
-                            <span className="text-sm font-bold text-slate-800 dark:text-white">Prioridade {partner.priority_stars}</span>
+                                <div className={`flex items-center ml-2 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 py-1 bg-white dark:bg-slate-800 ${getStarColor(partner.priority_stars)}`}>
+                                    <span className="material-symbols-outlined text-[18px] mr-1">star</span>
+                                    <span className="text-sm font-bold text-slate-800 dark:text-white">Prioridade {partner.priority_stars}</span>
+                                </div>
+                            </div>
+                            <p className="text-slate-500 dark:text-slate-400 mt-1">
+                                <span className="material-symbols-outlined text-[16px] align-text-bottom mr-1">location_on</span>
+                                {partner.cidade}
+                            </p>
                         </div>
                     </div>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">
-                        <span className="material-symbols-outlined text-[16px] align-text-bottom mr-1">location_on</span>
-                        {partner.cidade}
-                    </p>
                 </div>
             </div>
 

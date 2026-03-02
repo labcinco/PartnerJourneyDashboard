@@ -7,6 +7,7 @@ export type CalculatedMetrics = {
     indice_desempenho: number;
     city_weight: number;
     priority_stars: number;
+    logo_url?: string;
 };
 
 export type EnrichedPerformanceRow = PerformanceRow & CalculatedMetrics;
@@ -98,7 +99,7 @@ export const calculatePriorityStars = (
     return Math.max(1, Math.min(5, finalScore));
 };
 
-export const enrichPartnerData = (partner: PerformanceRow): EnrichedPerformanceRow => {
+export const enrichPartnerData = (partner: PerformanceRow, logoUrl?: string): EnrichedPerformanceRow => {
     const total_pedidos = calculateTotalPedidos(partner);
     const dias_desde_lancamento = calculateDiasDesdeLancamento(partner.lancamento);
     const pedidos_esperados = calculatePedidosEsperados(dias_desde_lancamento);
@@ -113,7 +114,8 @@ export const enrichPartnerData = (partner: PerformanceRow): EnrichedPerformanceR
         pedidos_esperados,
         indice_desempenho,
         city_weight,
-        priority_stars
+        priority_stars,
+        logo_url: logoUrl || partner.logo_url
     };
 };
 

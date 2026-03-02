@@ -18,6 +18,7 @@ function App() {
   const [cityFilter, setCityFilter] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'priority_stars', direction: 'desc' });
   const [selectedRow, setSelectedRow] = useState<EnrichedPerformanceRow | null>(null);
+  const [logoMapping, setLogoMapping] = useState<Record<string, string>>({});
 
   // -- Manual overrides (persisted in localStorage) --------------------------
   const { overrides, saveOverride, clearOverride } = useManualOverrides();
@@ -30,9 +31,10 @@ function App() {
     tableData.map(row => {
       const override = overrides[row.estabelecimento];
       const merged = override ? { ...row, ...override } : row;
-      return enrichPartnerData(merged);
+      const logoUrl = logoMapping[row.estabelecimento];
+      return enrichPartnerData(merged, logoUrl);
     }),
-    [overrides]  // recompute whenever overrides change
+    [overrides, logoMapping]  // recompute whenever overrides or logos change
   );
 
   // Extract unique cities
@@ -82,6 +84,28 @@ function App() {
     async function loadData() {
       try {
         await fetchPartners(); // simulate load
+
+        // Fetch logos from Google Sheets
+        const sheetsUrl = import.meta.env.VITE_SHEETS_URL;
+        if (sheetsUrl) {
+          const response = await fetch(sheetsUrl);
+          const csvText = await response.text();
+
+          // Simple CSV parsing (assuming headers: loja_id,loja_nome,logo_arquivo,logo_url,cms_arte_url)
+          const lines = csvText.split('\n').filter(line => line.trim() !== '');
+          const mapping: Record<string, string> = {};
+
+          // Skip header
+          for (let i = 1; i < lines.length; i++) {
+            const parts = lines[i].split(',');
+            if (parts.length >= 4) {
+              const name = parts[1].trim();
+              const url = parts[3].trim();
+              mapping[name] = url;
+            }
+          }
+          setLogoMapping(mapping);
+        }
       } catch (error) {
         console.error("Failed to load data", error);
       } finally {

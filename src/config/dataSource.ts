@@ -5,8 +5,8 @@
 export const DATA_SOURCE = {
     // type: 'csv' | 'json'
     type: 'csv' as const,
-    // Example public CSV URL (published Google Sheet)
-    url: 'https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?output=csv',
+    // Use spreadsheet URL from .env
+    url: import.meta.env.VITE_SHEETS_URL || '',
     // If using JSON endpoint, set the API key here (optional)
     apiKey: ''
 };

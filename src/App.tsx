@@ -1,24 +1,31 @@
 import { useState, useEffect, useMemo } from 'react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale/pt-BR';
 import Header from './components/Header';
 import FilterToolbar from './components/FilterToolbar';
 import PerformanceTable from './components/PerformanceTable';
 import type { SortConfig } from './components/PerformanceTable';
 import PartnerDetailsView from './components/PartnerDetailsView';
 import SettingsView from './components/SettingsView';
-import { tableData } from './data/tableData';
-import { fetchPartners } from './data/mockData';
+import { DATA_SOURCE } from './config/dataSource';
 import { enrichPartnerData, type EnrichedPerformanceRow } from './utils/calculations';
 import { useManualOverrides } from './hooks/useManualOverrides';
 import { useAnalyticsOverrides } from './hooks/useAnalyticsOverrides';
+import { useDataSync } from './hooks/useDataSync';
 
 function App() {
   const [currentView, setCurrentView] = useState<'dashboard' | 'settings'>('dashboard');
-  const [loading, setLoading] = useState(true);
   const [dateFilter, setDateFilter] = useState('');
   const [cityFilter, setCityFilter] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'priority_stars', direction: 'desc' });
   const [selectedRow, setSelectedRow] = useState<EnrichedPerformanceRow | null>(null);
   const [logoMapping, setLogoMapping] = useState<Record<string, string>>({});
+
+  const sheetsDataUrl = import.meta.env.VITE_SHEETS_DATA_URL || DATA_SOURCE.url;
+  const { data: syncData, isLoading: loadingSync, error: syncError, lastSyncTime, isUsingCache, refreshData } = useDataSync({
+    url: sheetsDataUrl,
+    apiKey: DATA_SOURCE.apiKey
+  });
 
   // -- Manual overrides (persisted in localStorage) --------------------------
   const { overrides, saveOverride, clearOverride } = useManualOverrides();
@@ -28,13 +35,13 @@ function App() {
 
   // Enrich Data – apply manual overrides before enriching
   const enrichedData = useMemo(() =>
-    tableData.map(row => {
+    syncData.map(row => {
       const override = overrides[row.estabelecimento];
       const merged = override ? { ...row, ...override } : row;
       const logoUrl = logoMapping[row.estabelecimento];
       return enrichPartnerData(merged, logoUrl);
     }),
-    [overrides, logoMapping]  // recompute whenever overrides or logos change
+    [syncData, overrides, logoMapping]  // recompute whenever sync, overrides, or logos change
   );
 
   // Extract unique cities
@@ -80,11 +87,10 @@ function App() {
     setSortConfig({ key, direction });
   };
 
+  // Load Logos
   useEffect(() => {
-    async function loadData() {
+    async function loadLogos() {
       try {
-        await fetchPartners(); // simulate load
-
         // Fetch logos from Google Sheets (using hardcoded fallback to simplify live deploy)
         const sheetsUrl = import.meta.env.VITE_SHEETS_URL || 'https://docs.google.com/spreadsheets/d/1Y5_TXSIi2RFyd_uUMXcWLQTQ52Oy8kCwYZrnlj6a5Xk/export?format=csv';
         if (sheetsUrl) {
@@ -108,12 +114,10 @@ function App() {
           setLogoMapping(mapping);
         }
       } catch (error) {
-        console.error("Failed to load data", error);
-      } finally {
-        setLoading(false);
+        console.error("Failed to load logos", error);
       }
     }
-    loadData();
+    loadLogos();
   }, []);
 
   // Summary Metrics Calculation
@@ -168,8 +172,48 @@ function App() {
             ) : (
               <>
                 <div className="px-6 py-6 border-b border-slate-100 dark:border-slate-800">
-                  <h1 className="text-slate-900 dark:text-white text-3xl font-bold leading-tight tracking-tight mb-2">Jornada do Parceiro – Monitoramento de 28 Dias</h1>
-                  <p className="text-slate-500 dark:text-slate-400 text-base font-normal">Acompanhe as métricas de desempenho e o status de saúde dos parceiros nos primeiros 28 dias críticos de ativação.</p>
+                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                    <div>
+                      <h1 className="text-slate-900 dark:text-white text-3xl font-bold leading-tight tracking-tight mb-2">Jornada do Parceiro – Monitoramento de 28 Dias</h1>
+                      <p className="text-slate-500 dark:text-slate-400 text-base font-normal">Acompanhe as métricas de desempenho e o status de saúde dos parceiros nos primeiros 28 dias críticos de ativação.</p>
+                    </div>
+                    <div className="flex flex-col items-end shrink-0">
+                      <button
+                        onClick={() => refreshData()}
+                        disabled={loadingSync}
+                        className="flex items-center gap-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-medium px-4 py-2 rounded-lg transition-colors focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span className={`material-symbols-outlined text-lg ${loadingSync ? 'animate-spin text-primary' : ''}`}>sync</span>
+                        {loadingSync ? 'Atualizando...' : 'Atualizar agora'}
+                      </button>
+
+                      {lastSyncTime && (
+                        <div className="text-xs text-slate-400 dark:text-slate-500 mt-2 flex items-center justify-end gap-1">
+                          Última atualização: {format(lastSyncTime, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {isUsingCache && (
+                    <div className="mt-4 flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-lg text-amber-800 dark:text-amber-400">
+                      <span className="material-symbols-outlined shrink-0">cloud_off</span>
+                      <div>
+                        <p className="text-sm font-semibold">Usando dados em cache</p>
+                        <p className="text-sm opacity-90">Não foi possível conectar à base de dados no momento. Mostrando as últimas informações salvas localmente.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {syncError && !isUsingCache && (
+                    <div className="mt-4 flex items-start gap-3 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-lg text-red-800 dark:text-red-400">
+                      <span className="material-symbols-outlined shrink-0">error</span>
+                      <div>
+                        <p className="text-sm font-semibold">Erro ao atualizar dados</p>
+                        <p className="text-sm opacity-90">{syncError}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <FilterToolbar
@@ -180,9 +224,10 @@ function App() {
                   cities={uniqueCities}
                 />
 
-                {loading ? (
-                  <div className="flex-1 flex items-center justify-center p-6">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                {loadingSync ? (
+                  <div className="flex-1 flex flex-col items-center justify-center p-12 min-h-[400px]">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                    <p className="text-slate-500 font-medium">Sincronizando dados...</p>
                   </div>
                 ) : (
                   <div className="flex flex-col flex-1 divide-y divide-slate-100 dark:divide-slate-800">

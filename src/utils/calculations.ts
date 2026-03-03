@@ -43,7 +43,7 @@ export const calculatePedidosEsperados = (dias: number): number => {
     if (dias === 0) return 0;
     // Freeze expected orders at max 30 if > 28 days
     const cappedDays = Math.min(dias, 28);
-    return Math.round((cappedDays / 28) * 30 * 10) / 10; // Round to 1 decimal
+    return Math.round((cappedDays / 28) * 30); // Round to integer
 };
 
 // 4) Índice de desempenho

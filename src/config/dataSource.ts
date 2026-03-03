@@ -5,8 +5,8 @@
 export const DATA_SOURCE = {
     // type: 'csv' | 'json'
     type: 'csv' as const,
-    // Use the public spreadsheet URL directly (simplifies deployment so we don't need env vars)
-    url: import.meta.env.VITE_SHEETS_URL || 'https://docs.google.com/spreadsheets/d/1Y5_TXSIi2RFyd_uUMXcWLQTQ52Oy8kCwYZrnlj6a5Xk/export?format=csv',
+    // Provide a sample CSV url so the project starts with valid mock data since tableData.ts was replaced
+    url: import.meta.env.VITE_SHEETS_DATA_URL || 'https://docs.google.com/spreadsheets/d/1rlUp9z9Mf8ipI807U9lR489XAPeU2JrXi72KQJ5PEf0/export?format=csv',
     // If using JSON endpoint, set the API key here (optional)
     apiKey: ''
 };

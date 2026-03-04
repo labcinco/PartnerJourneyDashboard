@@ -64,8 +64,25 @@ export async function fetchGoogleSheetsData(url: string, apiKey?: string): Promi
     const isJson = url.toLowerCase().includes('json') || response.headers.get('content-type')?.includes('json');
 
     if (isJson) {
-        const data = await response.json();
-        return validateAndMapData(data); // Assuming JSON is an array of objects
+        let data = await response.json();
+
+        // Handle Google Sheets API v4 format (array of arrays with wrapper)
+        if (data.values && Array.isArray(data.values)) {
+            data = data.values.map((row: any[]) => ({
+                cidade: row[0],
+                id: row[1],
+                estabelecimento: row[2],
+                status: row[3],
+                lancamento: row[4],
+                week_1: row[6],
+                week_2: row[7],
+                week_3: row[8],
+                week_4: row[9]
+            }));
+        }
+
+        // At this point data should be a plain array of objects (e.g. from remoteData.json)
+        return validateAndMapData(Array.isArray(data) ? data : [data]);
     }
 
     // Parse CSV
